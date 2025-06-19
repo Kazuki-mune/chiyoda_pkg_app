@@ -651,7 +651,7 @@ final_df = pd.concat(processed_dfs, ignore_index=True)
 columns = [
     'ロットサイズ', 'ロットサイズ_最小', 'ロットサイズ_最大', '稼働数',  '製造数量', '平均数量',
     '数量ばらつき', '所要時間合計','所要時間基礎','所要時間工程','工程稼働率（%）', '工程稼働率ばらつき', '調色時間', '調色時間ばらつき',
-    '平均ロスm数', '平均品質ロスm数', 'リードしM数', '製造ロス率（%）', '品質ロス率（%）', 'リード紙ロス率（%）', '品質ロスばらつき'
+    '平均ロスm数', '平均品質ロスm数', 'リードしM数', '製造ロス率（%）', '品質ロス率（%）', 'リード紙ロス率（%）', '品質ロスばらつき','機械速度'
 ]
 
 lot_size_data = [
@@ -714,8 +714,14 @@ for df in processed_dfs:
         loss_avg = round(filtered['20_製造ロス'].mean(), 1)
         q_loss_avg = round(filtered['品質ロス'].mean(), 1)
         lead_avg = round(filtered['36_リード紙Ｍ数'].mean(), 1)
+        # 機械速度の計算（製造数/工程時間）
+        try:
+            kikai_sokudo = float(seizo_total.replace(',', '')) / float(total_26)
+            kikai_sokudo = round(kikai_sokudo, 2) if pd.notnull(kikai_sokudo) else np.nan
+        except (ValueError, ZeroDivisionError):
+            kikai_sokudo = np.nan
 
-        
+
 
         with pd.option_context('mode.use_inf_as_na', True):
             loss_rate = ((filtered['20_製造ロス'] / filtered['18_投入数']) * 100).mean()
@@ -734,7 +740,7 @@ for df in processed_dfs:
               cv_qty, total_30, total_29, total_26,
                   kadoritsu, kadoritsu_cv, choshoku_mean, choshoku_cv,
                   loss_avg, q_loss_avg, lead_avg,
-                  loss_rate, q_loss_rate, lead_rate, q_loss_cv]
+                  loss_rate, q_loss_rate, lead_rate, q_loss_cv,kikai_sokudo]
         
         results.append([data[0], min_val, max_val] + metrics)
 
@@ -776,7 +782,11 @@ for df in processed_dfs:
     q_loss_avg = round(filtered['品質ロス'].mean(), 1)
     lead_avg = round(filtered['36_リード紙Ｍ数'].mean(), 1)
 
-        
+    try:
+            kikai_sokudo = float(seizo_total.replace(',', '')) / float(total_26)
+            kikai_sokudo = round(kikai_sokudo, 2) if pd.notnull(kikai_sokudo) else np.nan
+    except (ValueError, ZeroDivisionError):
+            kikai_sokudo = np.nan
 
     with pd.option_context('mode.use_inf_as_na', True):
         loss_rate = ((filtered['20_製造ロス'] / filtered['18_投入数']) * 100).mean()
@@ -793,7 +803,7 @@ for df in processed_dfs:
               cv_qty, total_30, total_29, total_26,
               kadoritsu, kadoritsu_cv, choshoku_mean, choshoku_cv,
               loss_avg, q_loss_avg, lead_avg,
-              loss_rate, q_loss_rate, lead_rate, q_loss_cv]
+              loss_rate, q_loss_rate, lead_rate, q_loss_cv,kikai_sokudo]
     
     results.append(['試作', np.nan, np.nan] + metrics)
     all_results.extend(results)
